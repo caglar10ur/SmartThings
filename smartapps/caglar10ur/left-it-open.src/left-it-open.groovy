@@ -1,6 +1,6 @@
 /*
  *  Copyright 2015 SmartThings
- *  Copyright 2016 Suleyman C Onur
+ *  Copyright 2016 S.Çağlar Onur
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -15,7 +15,7 @@
 definition(
     name: "Left It Open",
     namespace: "caglar10ur",
-    author: "Suleyman C Onur",
+    author: "S.Çağlar Onur",
     description: "Left It Open",
     category: "Convenience",
     iconUrl: "https://s3.amazonaws.com/smartapp-icons/Convenience/Cat-Convenience.png",
