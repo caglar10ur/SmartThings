@@ -76,7 +76,6 @@ def doorClosed(evt) {
 def doorOpenTooLong() {
     log.trace "doorOpenTooLong()"
 
-
     def contactState = contact.currentState("contact")
     if (contactState.value == "open") {
         def elapsed = now() - contactState.rawDateCreated.time
