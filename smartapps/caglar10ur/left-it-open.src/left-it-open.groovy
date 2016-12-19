@@ -16,7 +16,7 @@ definition(
     name: "Left It Open",
     namespace: "caglar10ur",
     author: "S.Çağlar Onur",
-    description: "Left It Open",
+    description: "Watch contact sensor and notify if left open",
     category: "Convenience",
     iconUrl: "https://s3.amazonaws.com/smartapp-icons/Convenience/Cat-Convenience.png",
     iconX2Url: "https://s3.amazonaws.com/smartapp-icons/Convenience/Cat-Convenience@2x.png",
@@ -25,13 +25,14 @@ definition(
 
 preferences {
     section("Monitor this door or window") {
-        input "contact", "capability.contactSensor"
+        input "contact", "capability.contactSensor", title: "Sensor to monitor", required: true
     }
     section("And notify me if it's open for more than this many minutes (default 10)") {
-        input "openThreshold", "number", description: "Number of minutes", required: false
+        input "openThreshold", "number", title: "Number of minutes", defaultValue: 10, required: false
     }
+    
     section("Delay between notifications (default 10 minutes") {
-        input "frequency", "number", title: "Number of minutes", description: "", required: false
+        input "frequency", "number", title: "Number of minutes", defaultValue: 10, required: false
     }
     section("Via text message at this number (or via push notification if not specified") {
         input("recipients", "contact", title: "Send notifications to") {
@@ -49,13 +50,14 @@ def installed() {
 def updated() {
     log.trace "Updated with settings: ${settings}"
 
-    unsubscribe()
+	unsubscribe()
+	// unschedule all tasks
+	unschedule()
+
     initialize()
 }
 
 def initialize() {
-    log.trace "Initialized with settings: ${settings}"
-
     subscribe(contact, "contact.open", doorOpen)
     subscribe(contact, "contact.closed", doorClosed)
 }
@@ -63,10 +65,8 @@ def initialize() {
 def doorOpen(evt) {
     log.trace "doorOpen($evt.name: $evt.value)"
 
-    def t0 = now()
     def delay = (openThreshold != null && openThreshold != "") ? openThreshold * 60 : 600
     runIn(delay, doorOpenTooLong, [overwrite: false])
-    log.trace "scheduled doorOpenTooLong in ${now() - t0} msec"
 }
 
 def doorClosed(evt) {
@@ -76,31 +76,30 @@ def doorClosed(evt) {
 def doorOpenTooLong() {
     log.trace "doorOpenTooLong()"
 
-    def contactState = contact.currentState("contact")
-    def freq = (frequency != null && frequency != "") ? frequency * 60 : 600
-
+  
+  	def contactState = contact.currentState("contact")
     if (contactState.value == "open") {
         def elapsed = now() - contactState.rawDateCreated.time
-        def threshold = ((openThreshold != null && openThreshold != "") ? openThreshold * 60000 : 60000) - 1000
-        if (elapsed >= threshold) {
-            log.debug "Contact has stayed open long enough since last check ($elapsed ms): calling sendMessage()"
-            sendMessage()
+        def threshold = (openThreshold != null && openThreshold != "") ? openThreshold : 10
+        // elapsed time is in milliseconds, so the threshold must be converted to milliseconds too
+        if (elapsed >= (threshold * 60000) - 1000) {
+			def freq = (frequency != null && frequency != "") ? frequency * 60 : 600
+            // schedule the next notification
             runIn(freq, doorOpenTooLong, [overwrite: false])
+
+			notify("${contact.displayName} has been left open for ${threshold} minutes.")
         } else {
             log.debug "Contact has not stayed open long enough since last check ($elapsed ms): doing nothing"
         }
     } else {
-        log.warn "doorOpenTooLong() called but contact is closed: doing nothing"
+        log.debug "doorOpenTooLong() called but contact is closed: doing nothing"
     }
 }
 
-void sendMessage() {
-    log.trace "sendMessage()"
+private notify(msg) {
+    log.trace "sendMessage(${msg})"
 
-    def minutes = (openThreshold != null && openThreshold != "") ? openThreshold : 10
-    def msg = "${contact.displayName} has been left open for ${minutes} minutes."
-    log.info msg
-    if (location.contactBookEnabled) {
+	if (location.contactBookEnabled) {
         sendNotificationToContacts(msg, recipients)
     } else {
         if (phone) {

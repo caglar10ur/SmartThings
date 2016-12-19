@@ -30,8 +30,8 @@ preferences {
     }
 
     section("Set Temperature Alerts:") {
-        input "maxThreshold", "number", title: "if above... (default 90°)", defaultValue:90, required: true
-            input "minThreshold", "number", title: "if below... (default 60°)", defaultValue:60, required: true
+        input "maxThreshold", "number", title: "if above... (default 90°)", defaultValue: 90, required: true
+            input "minThreshold", "number", title: "if below... (default 60°)", defaultValue: 60, required: true
     }
 
     section("Via text message at this number (or via push notification if not specified") {
