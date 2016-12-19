@@ -25,15 +25,15 @@ definition(
 
 
 preferences {
-	section("Select Things to Monitor:") {
-		input "thermostats", "capability.temperatureMeasurement", title: "Things With Thermostat Sensor", multiple: true, required: true
+    section("Select Things to Monitor:") {
+        input "thermostats", "capability.temperatureMeasurement", title: "Things With Thermostat Sensor", multiple: true, required: true
     }
-    
+
     section("Set Temperature Alerts:") {
-		input "maxThreshold", "number", title: "if above... (default 90°)", defaultValue:90, required: true
-		input "minThreshold", "number", title: "if below... (default 60°)", defaultValue:60, required: true
-	}
-  
+        input "maxThreshold", "number", title: "if above... (default 90°)", defaultValue:90, required: true
+            input "minThreshold", "number", title: "if below... (default 60°)", defaultValue:60, required: true
+    }
+
     section("Via text message at this number (or via push notification if not specified") {
         input("recipients", "contact", title: "Send notifications to") {
             input "phone", "phone", title: "Phone number (optional)", required: false
@@ -42,24 +42,24 @@ preferences {
 }
 
 def installed() {
-	log.trace "Installed with settings: ${settings}"
+    log.trace "Installed with settings: ${settings}"
 
-	initialize()
+    initialize()
 }
 
 def updated() {
-	log.trace "Updated with settings: ${settings}"
+    log.trace "Updated with settings: ${settings}"
 
-	unsubscribe()
+    unsubscribe()
     // unschedule all tasks
     unschedule()
 
-	initialize()
+    initialize()
 }
 
 def initialize() {
-	// schedule the task
-	runEvery1Hour(checkTemprature)
+    // schedule the task
+    runEvery1Hour(checkTemprature)
     // run once
     checkTemprature()
 }
@@ -67,20 +67,20 @@ def initialize() {
 def checkTemprature() {
     log.trace "checkTemprature()"
 
-	for (thermostat in thermostats) {
-    	def temperature = thermostat.currentValue("temperature")
+    for (thermostat in thermostats) {
+        def temperature = thermostat.currentValue("temperature")
         if (temperature == null || temperature == "") {
-        	log.error "Skipping ${thermostat.label} as reading currentValue failed"
-        	continue
+            log.error "Skipping ${thermostat.label} as reading currentValue failed"
+            continue
         }
         log.trace "Checking ${thermostat.label}: ${temperature}°"
-        
+
         if (settings.maxThreshold.toInteger() != null && temperature > settings.maxThreshold.toInteger()) {
-			notify("${thermostat.label} [${temperature}°] is BELOW the alert level of ${settings.maxThreshold.toInteger()}°")
+            notify("${thermostat.label} [${temperature}°] is BELOW the alert level of ${settings.maxThreshold.toInteger()}°")
         } else if (settings.minThreshold.toInteger() != null && temperature <= settings.minThreshold.toInteger()) {
-			notify("${thermostat.label} [${temperature}°] is ABOVE the alert level of ${settings.maxThreshold.toInteger()}°")
+            notify("${thermostat.label} [${temperature}°] is ABOVE the alert level of ${settings.maxThreshold.toInteger()}°")
         } else {
-        	log.debug "${thermostat.label} [${temperature}°] is in the acceptable range"
+            log.debug "${thermostat.label} [${temperature}°] is in the acceptable range"
         }
     }
 }
