@@ -30,7 +30,7 @@ preferences {
     section("And notify me if it's open for more than this many minutes (default 10)") {
         input "openThreshold", "number", title: "Number of minutes", defaultValue: 10, required: false
     }
-    
+
     section("Delay between notifications (default 10 minutes") {
         input "frequency", "number", title: "Number of minutes", defaultValue: 10, required: false
     }
@@ -50,9 +50,9 @@ def installed() {
 def updated() {
     log.trace "Updated with settings: ${settings}"
 
-	unsubscribe()
-	// unschedule all tasks
-	unschedule()
+    unsubscribe()
+    // unschedule all tasks
+    unschedule()
 
     initialize()
 }
@@ -76,18 +76,18 @@ def doorClosed(evt) {
 def doorOpenTooLong() {
     log.trace "doorOpenTooLong()"
 
-  
-  	def contactState = contact.currentState("contact")
+
+    def contactState = contact.currentState("contact")
     if (contactState.value == "open") {
         def elapsed = now() - contactState.rawDateCreated.time
         def threshold = (openThreshold != null && openThreshold != "") ? openThreshold : 10
         // elapsed time is in milliseconds, so the threshold must be converted to milliseconds too
         if (elapsed >= (threshold * 60000) - 1000) {
-			def freq = (frequency != null && frequency != "") ? frequency * 60 : 600
+            def freq = (frequency != null && frequency != "") ? frequency * 60 : 600
             // schedule the next notification
             runIn(freq, doorOpenTooLong, [overwrite: false])
 
-			notify("${contact.displayName} has been left open for ${threshold} minutes.")
+            notify("${contact.displayName} has been left open for ${threshold} minutes.")
         } else {
             log.debug "Contact has not stayed open long enough since last check ($elapsed ms): doing nothing"
         }
@@ -99,7 +99,7 @@ def doorOpenTooLong() {
 private notify(msg) {
     log.trace "sendMessage(${msg})"
 
-	if (location.contactBookEnabled) {
+    if (location.contactBookEnabled) {
         sendNotificationToContacts(msg, recipients)
     } else {
         if (phone) {
