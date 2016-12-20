@@ -14,95 +14,95 @@
  *
  */
 definition(
-	name: "Where is my the bus?",
-	namespace: "caglar10ur",
-	author: "S.Çağlar Onur",
-	description: "Where is my bus?",
-	category: "Convenience",
-	iconUrl: "https://s3.amazonaws.com/smartapp-icons/Convenience/Cat-Convenience.png",
-	iconX2Url: "https://s3.amazonaws.com/smartapp-icons/Convenience/Cat-Convenience@2x.png",
-	iconX3Url: "https://s3.amazonaws.com/smartapp-icons/Convenience/Cat-Convenience@2x.png")
+    name: "Where is my the bus?",
+    namespace: "caglar10ur",
+    author: "S.Çağlar Onur",
+    description: "Where is my bus?",
+    category: "Convenience",
+    iconUrl: "https://s3.amazonaws.com/smartapp-icons/Convenience/Cat-Convenience.png",
+    iconX2Url: "https://s3.amazonaws.com/smartapp-icons/Convenience/Cat-Convenience@2x.png",
+    iconX3Url: "https://s3.amazonaws.com/smartapp-icons/Convenience/Cat-Convenience@2x.png")
 
 preferences {
-	section("Bus-NG details") {
-		input "agency", "text", title: "Agency", required: true, defaultValue: "actransit"
-		input "route", "text", title: "Route", required: true, defaultValue: "39"
-		input "direction", "text", title: "Direction", required: true, defaultValue: "39_16_1"
-		input "stop", "text", title: "Stop", required: true, defaultValue: "1010920"
-	}
-	section("Virtual switch to monitor") {
-		input "contact", "capability.momentary", title: "Sensor to monitor", required: true
-	}
+    section("Bus-NG details") {
+        input "agency", "text", title: "Agency", required: true, defaultValue: "actransit"
+        input "route", "text", title: "Route", required: true, defaultValue: "39"
+        input "direction", "text", title: "Direction", required: true, defaultValue: "39_16_1"
+        input "stop", "text", title: "Stop", required: true, defaultValue: "1010920"
+    }
+    section("Virtual switch to monitor") {
+        input "contact", "capability.momentary", title: "Sensor to monitor", required: true
+    }
 
-	section {
-		input "sonos", "capability.musicPlayer", title: "On this Sonos player", required: true
-	}
-	section("More options", hideable: true, hidden: true) {
-		input "resumePlaying", "bool", title: "Resume currently playing music after notification", required: false, defaultValue: true
-		input "volume", "number", title: "Temporarily change volume", description: "0-100%", required: false
-	}
+    section {
+        input "sonos", "capability.musicPlayer", title: "On this Sonos player", required: true
+    }
+    section("More options", hideable: true, hidden: true) {
+        input "resumePlaying", "bool", title: "Resume currently playing music after notification", required: false, defaultValue: true
+        input "volume", "number", title: "Temporarily change volume", description: "0-100%", required: false
+    }
 }
 
 def installed() {
-	log.trace "Installed with settings: ${settings}"
+    log.trace "Installed with settings: ${settings}"
 
-	initialize()
+    initialize()
 }
 
 def updated() {
-	log.trace "Updated with settings: ${settings}"
+    log.trace "Updated with settings: ${settings}"
 
-	unsubscribe()
-	initialize()
+    unsubscribe()
+    initialize()
 }
 
 def initialize() {
-	log.trace "Initialized with settings: ${settings}"
+    log.trace "Initialized with settings: ${settings}"
 
-	subscribe(contact, "switch.on", refresh)
+    subscribe(contact, "switch.on", refresh)
 }
 
 def refresh($evt) {
-	log.trace "Refresh called with ${evt}"
+    log.trace "Refresh called with ${evt}"
 
-	// construct the url
-	def url = "http://bus-ng.10ur.org/agencies/${agency}/routes/${route}/directions/${direction}/stops/${stop}/predictions/"
-	try {
-		httpGet(url) { resp ->
-			if(resp.status == 200 && resp.data) {
-				log.debug "Agency: ${resp.data.estimations.agency_title}"
-				log.debug "Route: ${resp.data.estimations.route_title}"
-				log.debug "Stop: ${resp.data.estimations.stop_title}"
+    // construct the url
+    def url = "http://bus-ng.10ur.org/agencies/${agency}/routes/${route}/directions/${direction}/stops/${stop}/predictions/"
+    try {
+        httpGet(url) { resp ->
+            if(resp.status == 200 && resp.data) {
+                log.debug "Agency: ${resp.data.estimations.agency_title}"
+                log.debug "Route: ${resp.data.estimations.route_title}"
+                log.debug "Stop: ${resp.data.estimations.stop_title}"
 
-				def msg = ""
-				if (resp.data.estimations.predictions.size() == 0) {
-					msg = "Master, looks like there is no bus scheduled for ${resp.data.estimations.route_title}."
-				}
+                def msg = ""
+                if (resp.data.estimations.predictions.size() == 0) {
+                    msg = "Master, looks like there is no bus scheduled for ${resp.data.estimations.route_title}."
+                }
 
-				if (resp.data.estimations.predictions.size() > 0) {
-					log.debug "Predictions: ${resp.data.estimations.predictions}"
-					msg = "Master, your bus is ${resp.data.estimations.predictions[0].minutes} minutes away. Your bus is ${resp.data.estimations.route_title}, it goes ${resp.data.estimations.predictions[0].dir_title} and your stop is at ${resp.data.estimations.stop_title} ."
-				}
+                if (resp.data.estimations.predictions.size() > 0) {
+                    log.debug "Predictions: ${resp.data.estimations.predictions}"
+                    msg = "Master, your bus is ${resp.data.estimations.predictions[0].minutes} minutes away. Your bus is ${resp.data.estimations.route_title}, it goes ${resp.data.estimations.predictions[0].dir_title} and your stop is at ${resp.data.estimations.stop_title} ."
+                }
 
-				if (resp.data.estimations.predictions.size() == 1) {
-					msg = msg + "Unfortunately that is the last bus for today ."
-				}
+                if (resp.data.estimations.predictions.size() == 1) {
+                    msg = msg + "Unfortunately that is the last bus for today ."
+                }
 
-				if (resp.data.estimations.predictions.size() > 1) {
-					msg = msg + "If you can not catch this one then you can catch the next bus. The next one is in ${resp.data.estimations.predictions[1].minutes} minutes ."
-				}
+                if (resp.data.estimations.predictions.size() > 1) {
+                    msg = msg + "If you can not catch this one then you can catch the next bus. The next one is in ${resp.data.estimations.predictions[1].minutes} minutes ."
+                }
 
-				def sound = textToSpeech(msg)
-				if (resumePlaying){
-					sonos.playTrackAndResume(sound.uri, volume)
-				} else {
-					sonos.playTrackAndRestore(sound.uri, volume)
-				}
-			} else {
-				log.error "HTTP Get failed with ${resp.status}"
-			}
-		}
-	} catch (e) {
-		log.error "Soomething went wrong: $e"
-	}
+                def sound = textToSpeech(msg)
+                if (resumePlaying){
+                    sonos.playTrackAndResume(sound.uri, volume)
+                } else {
+                    sonos.playTrackAndRestore(sound.uri, volume)
+                }
+            } else {
+                log.error "HTTP Get failed with ${resp.status}"
+            }
+        }
+    } catch (e) {
+        log.error "Soomething went wrong: $e"
+    }
 }
