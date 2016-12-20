@@ -76,9 +76,9 @@ def checkTemprature() {
         log.trace "Checking ${thermostat.label}: ${temperature}°"
 
         if (settings.maxThreshold.toInteger() != null && temperature > settings.maxThreshold.toInteger()) {
-            notify("${thermostat.label} [${temperature}°] is BELOW the alert level of ${settings.maxThreshold.toInteger()}°")
-        } else if (settings.minThreshold.toInteger() != null && temperature <= settings.minThreshold.toInteger()) {
             notify("${thermostat.label} [${temperature}°] is ABOVE the alert level of ${settings.maxThreshold.toInteger()}°")
+        } else if (settings.minThreshold.toInteger() != null && temperature < settings.minThreshold.toInteger()) {
+            notify("${thermostat.label} [${temperature}°] is BELOW the alert level of ${settings.maxThreshold.toInteger()}°")
         } else {
             log.debug "${thermostat.label} [${temperature}°] is in the acceptable range"
         }
