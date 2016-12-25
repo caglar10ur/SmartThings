@@ -39,7 +39,7 @@ preferences {
     }
     section("More options", hideable: true, hidden: true) {
         input "resumePlaying", "bool", title: "Resume currently playing music after notification", required: false, defaultValue: true
-        input "volume", "number", title: "Temporarily change volume", description: "0-100%", required: false
+            input "volume", "number", title: "Temporarily change volume", description: "0-100%", required: false
     }
 }
 

@@ -41,125 +41,125 @@ preferences {
     }
     section("More options", hideable: true, hidden: true) {
         input "resumePlaying", "bool", title: "Resume currently playing music after notification", required: false, defaultValue: true
-        input "volume", "number", title: "Temporarily change volume", description: "0-100%", required: false
+            input "volume", "number", title: "Temporarily change volume", description: "0-100%", required: false
     }
 }
 
 def installed() {
-	log.trace "Installed with settings: ${settings}"
+    log.trace "Installed with settings: ${settings}"
 
-	initialize()
+    initialize()
 }
 
 def updated() {
-	log.trace "Updated with settings: ${settings}"
+    log.trace "Updated with settings: ${settings}"
 
-	unsubscribe()
+    unsubscribe()
     // unschedule all tasks
     unschedule()
-	initialize()
+    initialize()
 }
 
 def initialize() {
-	log.trace "Initialized with settings: ${settings}"
+    log.trace "Initialized with settings: ${settings}"
 
-	// schedule a cron jobs for every WED at 7:00PM
-	schedule("0 0 19 ? * WED *", firstReminder)
+    // schedule a cron jobs for every WED at 7:00PM
+    schedule("0 0 19 ? * WED *", firstReminder)
 
-	// whether we have scheduled the second reminder
-	state.secondReminderScheduled = false
+    // whether we have scheduled the second reminder
+    state.secondReminderScheduled = false
     // whether we have scheduled the last reminder
-	state.lastReminderScheduled = false
+    state.lastReminderScheduled = false
 
     subscribe(contact, "contact.closed", closed)
 }
 
 def closed(evt) {
     log.trace "closed($evt.name: $evt.value)"
- 
-	// Ensure the new date object is set to local time zone
-	def df = new java.text.SimpleDateFormat("EEEE")
+
+    // Ensure the new date object is set to local time zone
+    def df = new java.text.SimpleDateFormat("EEEE")
     df.setTimeZone(location.timeZone)
-    
-	//Does the preference input Days, i.e., days-of-week, contain today?
+
+    //Does the preference input Days, i.e., days-of-week, contain today?
     def today = df.format(new Date())
     if (!days.contains(today)) {
-    	return
+        return
     }
- 
-	def between = timeOfDayIsBetween(fromTime, toTime, new Date(), location.timeZone)
-	if (!between) {
-    	return
+
+    def between = timeOfDayIsBetween(fromTime, toTime, new Date(), location.timeZone)
+    if (!between) {
+        return
     }
-    
+
     // do nothing if we don't have anything scheduled
     if (!state.secondReminderScheduld && !state.lastReminderScheduled) {
-    	return
+        return
     }
-    
-	// unschedule the last reminder if it is scheduled
-	if (state.secondReminderScheduled) {
-		unschedule(lastReminder)
-		state.lastReminderScheduled = false
-	}
-    
-	// unschedule the last reminder if it is scheduled
-	if (state.lastReminderScheduled) {
-		unschedule(lastReminder)
-		state.lastReminderScheduled = false
-	}
+
+    // unschedule the last reminder if it is scheduled
+    if (state.secondReminderScheduled) {
+        unschedule(lastReminder)
+        state.lastReminderScheduled = false
+    }
+
+    // unschedule the last reminder if it is scheduled
+    if (state.lastReminderScheduled) {
+        unschedule(lastReminder)
+        state.lastReminderScheduled = false
+    }
 }
 
 def firstReminder() {
-	log.trace "firstReminder()"
+    log.trace "firstReminder()"
 
-	speak("Master, tomorrow is the day. Don't forget to take out the trash. The best preparation for tomorrow is doing your best today.")
+    speak("Master, tomorrow is the day. Don't forget to take out the trash. The best preparation for tomorrow is doing your best today.")
     notify("Tomorrow is the trash day. Don't forget to take out the trash.")
-    
-	// schedule the second cron jobs for every WED at 9:00PM
+
+    // schedule the second cron jobs for every WED at 9:00PM
     state.secondReminderScheduled = true
-	schedule("0 0 21 ? * WED *", secondReminder)
+    schedule("0 0 21 ? * WED *", secondReminder)
 }
 
 def secondReminder() {
-	log.trace "secondReminder()"
+    log.trace "secondReminder()"
 
-	speak("Master, tomorrow is the day. Don't forget to take out the trash")
+    speak("Master, tomorrow is the day. Don't forget to take out the trash")
     notify("Tomorrow is the trash day. Don't forget to take out the trash.")
-        
-	// schedule a cron job in every THU at 8:00AM as a last resort
+
+    // schedule a cron job in every THU at 8:00AM as a last resort
     state.lastReminderScheduled = true
-	schedule("0 0 22 ? * THU *", lastReminder)
+    schedule("0 0 22 ? * THU *", lastReminder)
 }
 
 def lastReminder() {
-	log.trace "lastReminder()"
+    log.trace "lastReminder()"
 
-	speak("Master, tomorrow is the day. Don't forget to take out the trash. This is your last reminder.")
+    speak("Master, tomorrow is the day. Don't forget to take out the trash. This is your last reminder.")
     notify("Tomorrow is the trash day. Don't forget to take out the trash.")
 }
 
 private speak(msg) {
-	log.trace "speak(${msg})"
+    log.trace "speak(${msg})"
 
-	def sound = textToSpeech(msg)
-	if (resumePlaying){
-		sonos.playTrackAndResume(sound.uri, volume)
-	} else {
-		sonos.playTrackAndRestore(sound.uri, volume)
-	}
+    def sound = textToSpeech(msg)
+    if (resumePlaying){
+        sonos.playTrackAndResume(sound.uri, volume)
+    } else {
+        sonos.playTrackAndRestore(sound.uri, volume)
+    }
 }
 
 private notify(msg) {
     log.trace "notify(${msg})"
 
-    if (location.contactBookEnabled) {
-        sendNotificationToContacts(msg, recipients)
-    } else {
-        if (phone) {
-            sendSms phone, msg
+        if (location.contactBookEnabled) {
+            sendNotificationToContacts(msg, recipients)
         } else {
-            sendPush msg
+            if (phone) {
+                sendSms phone, msg
+            } else {
+                sendPush msg
+            }
         }
-    }
 }
