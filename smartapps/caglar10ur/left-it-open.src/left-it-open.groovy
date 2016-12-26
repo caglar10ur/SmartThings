@@ -30,14 +30,19 @@ preferences {
     section("And notify me if it's open for more than this many minutes (default 10)") {
         input "openThreshold", "number", title: "Number of minutes", defaultValue: 10, required: false
     }
-
+    section {
+        input "sonos", "capability.musicPlayer", title: "On this Sonos player", required: true
+    }
+    
     section("Delay between notifications (default 10 minutes") {
         input "frequency", "number", title: "Number of minutes", defaultValue: 10, required: false
     }
-    section("Via text message at this number (or via push notification if not specified") {
-        input("recipients", "contact", title: "Send notifications to") {
+    section("More options", hideable: true, hidden: true) {
+  		input("recipients", "contact", title: "Send notifications to") {
             input "phone", "phone", title: "Phone number (optional)", required: false
         }
+        input "resumePlaying", "bool", title: "Resume currently playing music after notification", required: false, defaultValue: true
+        input "volume", "number", title: "Temporarily change volume", description: "0-100%", required: false
     }
 }
 
@@ -58,23 +63,23 @@ def updated() {
 }
 
 def initialize() {
-    subscribe(contact, "contact.open", doorOpen)
-    subscribe(contact, "contact.closed", doorClosed)
+    subscribe(contact, "contact.open", opened)
+    subscribe(contact, "contact.closed", closed)
 }
 
-def doorOpen(evt) {
-    log.trace "doorOpen($evt.name: $evt.value)"
+def opened(evt) {
+    log.trace "opened($evt.name: $evt.value)"
 
     def delay = (openThreshold != null && openThreshold != "") ? openThreshold * 60 : 600
-    runIn(delay, doorOpenTooLong, [overwrite: false])
+    runIn(delay, tooLong, [overwrite: false])
 }
 
-def doorClosed(evt) {
-    log.trace "doorClosed($evt.name: $evt.value)"
+def closed(evt) {
+    log.trace "closed($evt.name: $evt.value)"
 }
 
-def doorOpenTooLong() {
-    log.trace "doorOpenTooLong()"
+def tooLong() {
+    log.trace "tooLong()"
 
     def contactState = contact.currentState("contact")
     if (contactState.value == "open") {
@@ -86,12 +91,25 @@ def doorOpenTooLong() {
             // schedule the next notification
             runIn(freq, doorOpenTooLong, [overwrite: false])
 
-            notify("${contact.displayName} has been left open for ${threshold} minutes.")
+			def msg = "${contact.displayName} has been left open for ${threshold} minutes."
+            speak(msg)
+            notify(msg)
         } else {
             log.debug "Contact has not stayed open long enough since last check ($elapsed ms): doing nothing"
         }
     } else {
         log.debug "doorOpenTooLong() called but contact is closed: doing nothing"
+    }
+}
+
+private speak(msg) {
+    log.trace "speak(${msg})"
+
+    def sound = textToSpeech(msg)
+    if (resumePlaying){
+        sonos.playTrackAndResume(sound.uri, volume)
+    } else {
+        sonos.playTrackAndRestore(sound.uri, volume)
     }
 }
 
