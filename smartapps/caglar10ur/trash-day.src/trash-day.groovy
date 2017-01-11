@@ -75,7 +75,7 @@ def initialize() {
 }
 
 def closed(evt) {
-    log.trace "closed($evt.name: $evt.value)"
+    log.trace "closed(${evt})"
 
     // Ensure the new date object is set to local time zone
     def df = new java.text.SimpleDateFormat("EEEE")
@@ -84,27 +84,37 @@ def closed(evt) {
     //Does the preference input Days, i.e., days-of-week, contain today?
     def today = df.format(new Date())
     if (!days.contains(today)) {
+  		log.debug "${today} is not in ${days}"
+        
         return
     }
 
     def between = timeOfDayIsBetween(fromTime, toTime, new Date(), location.timeZone)
     if (!between) {
+		log.debug "it is not between ${fromTime} and ${toTime}"
+        
         return
     }
 
     // do nothing if we don't have anything scheduled
     if (!state.secondReminderScheduld && !state.lastReminderScheduled) {
+    	log.debug "nothing is scheduled"
+        
         return
     }
 
     // unschedule the last reminder if it is scheduled
     if (state.secondReminderScheduled) {
+		log.debug "unscheduling second reminder"
+        
         unschedule(lastReminder)
         state.lastReminderScheduled = false
     }
 
     // unschedule the last reminder if it is scheduled
     if (state.lastReminderScheduled) {
+		log.debug "unscheduling last reminder"
+
         unschedule(lastReminder)
         state.lastReminderScheduled = false
     }
@@ -127,9 +137,9 @@ def secondReminder() {
     speak("Master, tomorrow is the day. Don't forget to take out the trash")
     notify("Tomorrow is the trash day. Don't forget to take out the trash.")
 
-    // schedule a cron job in every THU at 8:00AM as a last resort
+    // schedule a cron job in every WED at 10:00PM as a last resort
     state.lastReminderScheduled = true
-    schedule("0 0 22 ? * THU *", lastReminder)
+    schedule("0 0 22 ? * WED *", lastReminder)
 }
 
 def lastReminder() {
@@ -153,13 +163,13 @@ private speak(msg) {
 private notify(msg) {
     log.trace "notify(${msg})"
 
-        if (location.contactBookEnabled) {
-            sendNotificationToContacts(msg, recipients)
-        } else {
-            if (phone) {
-                sendSms phone, msg
-            } else {
-                sendPush msg
-            }
-        }
+	if (location.contactBookEnabled) {
+		sendNotificationToContacts(msg, recipients)
+	} else {
+		if (phone) {
+			sendSms phone, msg
+		} else {
+			sendPush msg
+		}
+	}
 }
