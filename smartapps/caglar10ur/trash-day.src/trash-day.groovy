@@ -77,6 +77,7 @@ def initialize() {
 def closed(evt) {
     log.trace "closed(${evt})"
 
+/*
     // Ensure the new date object is set to local time zone
     def df = new java.text.SimpleDateFormat("EEEE")
     df.setTimeZone(location.timeZone)
@@ -95,7 +96,7 @@ def closed(evt) {
         
         return
     }
-
+*/
     // do nothing if we don't have anything scheduled
     if (!state.secondReminderScheduld && !state.lastReminderScheduled) {
     	log.debug "nothing is scheduled"
@@ -107,8 +108,8 @@ def closed(evt) {
     if (state.secondReminderScheduled) {
 		log.debug "unscheduling second reminder"
         
-        unschedule(lastReminder)
-        state.lastReminderScheduled = false
+        unschedule(secondReminder)
+        state.secondReminderScheduled = false
     }
 
     // unschedule the last reminder if it is scheduled
