@@ -77,7 +77,6 @@ def initialize() {
 def closed(evt) {
     log.trace "closed(${evt})"
 
-/*
     // Ensure the new date object is set to local time zone
     def df = new java.text.SimpleDateFormat("EEEE")
     df.setTimeZone(location.timeZone)
@@ -93,13 +92,6 @@ def closed(evt) {
     def between = timeOfDayIsBetween(fromTime, toTime, new Date(), location.timeZone)
     if (!between) {
 		log.debug "it is not between ${fromTime} and ${toTime}"
-        
-        return
-    }
-*/
-    // do nothing if we don't have anything scheduled
-    if (!state.secondReminderScheduld && !state.lastReminderScheduled) {
-    	log.debug "nothing is scheduled"
         
         return
     }
