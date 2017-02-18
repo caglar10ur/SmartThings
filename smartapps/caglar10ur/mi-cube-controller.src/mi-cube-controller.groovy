@@ -131,7 +131,7 @@ def getSections(buttonNumber) {
         section("More options", hideable: true, hidden: true) {
             input "mode_${buttonNumber}_on", "mode", title: "Activate this mode:", required: false
 
-            def routines = location.helloHome ? .getPhrases() * .label
+            def routines = location.helloHome?.getPhrases()*.label
             if (routines) {
                 routines.sort()
                 input "routine_${buttonNumber}_on", "enum", title: "Activate this routine:", required: false, options: routines
@@ -306,13 +306,13 @@ def flip(devices, newState) {
 def toggle(devices) {
     log.debug "toggle: $devices = ${devices*.currentValue('switch')}"
 
-    if (devices * .currentValue('switch').contains('on')) {
+    if (devices*.currentValue('switch').contains('on')) {
         devices.off()
-    } else if (devices * .currentValue('switch').contains('off')) {
+    } else if (devices*.currentValue('switch').contains('off')) {
         devices.on()
-    } else if (devices * .currentValue('lock').contains('locked')) {
+    } else if (devices*.currentValue('lock').contains('locked')) {
         devices.unlock()
-    } else if (devices * .currentValue('lock').contains('unlocked')) {
+    } else if (devices*.currentValue('lock').contains('unlocked')) {
         devices.lock()
     } else {
         devices.on()
@@ -338,7 +338,7 @@ def temp(devices, level) {
 def changeMode(mode) {
     log.debug "changeMode: $mode, location.mode = $location.mode, location.modes = $location.modes"
 
-    if (location.mode != mode && location.modes ? .find {
+    if (location.mode != mode && location.modes?.find {
             it.name == mode
         }) {
         setLocationMode(mode)
