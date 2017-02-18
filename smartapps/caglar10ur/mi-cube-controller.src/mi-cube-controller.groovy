@@ -1,5 +1,5 @@
 /**
- *  7-Button Scene Controller
+ *  Mi Cube Controller - Based on https://github.com/mattjfrank/ZWN-SC7-Enerwave-7-Button-Scene-Controller/blob/master/ZWN-SC7.SmartApp.groovy
  *
  *  Copyright 2017 S.Çağlar Onur
  *
@@ -17,7 +17,7 @@ definition(
     name: "Mi Cube Controller",
     namespace: "caglar10ur",
     author: "S.Çağlar Onur",
-    description: "Mi Cube Controller - Based on Matt Frank ZWN-SC7 Button Controller",
+    description: "Mi Cube Controller - Based on Matt Frank's ZWN-SC7 Button Controller",
     category: "Convenience",
     iconUrl: "https://s3.amazonaws.com/smartapp-icons/Convenience/Cat-Convenience.png",
     iconX2Url: "https://s3.amazonaws.com/smartapp-icons/Convenience/Cat-Convenience@2x.png",
